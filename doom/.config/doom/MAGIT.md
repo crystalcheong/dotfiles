@@ -53,3 +53,31 @@ git log --pretty='%h %G? %s'
   - visual staging of hunks
   - branch/log exploration
   - quick status overview
+
+## Conflict playbook
+
+### Magit + Ediff flow
+
+1. `SPC g g` to open Magit status.
+2. In `Unmerged`, move to a conflicted file and press `e` (or `RET`) to resolve.
+3. In Ediff:
+   - `n` / `p`: next or previous conflict
+   - `a` / `b`: take A or B version
+   - `q`: quit Ediff
+4. Save the file and return to Magit.
+5. Stage resolved file with `s`.
+6. Finish operation:
+   - merge: `c c`
+   - rebase/cherry-pick: continue from terminal (`git rebase --continue` / `git cherry-pick --continue`)
+
+### Terminal-first fallback
+
+```bash
+git status
+# resolve markers in editor
+git add <resolved-files>
+git commit                # merge
+# or:
+git rebase --continue     # rebase
+git cherry-pick --continue
+```

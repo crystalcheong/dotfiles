@@ -1,0 +1,53 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: dotfiles-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find scripts -type f -name '*.sh' | sort)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No shell scripts found under scripts/"
+            exit 0
+          fi
+          shellcheck -x "${files[@]}"
+
+  stow-simulate:
+    name: Stow Simulation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install stow
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y stow
+
+      - name: Run stow simulate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HOME="$RUNNER_TEMP/home"
+          mkdir -p "$HOME/.tmux" "$HOME/.config/fish" "$HOME/.config/doom" "$HOME/.local/bin"
+          stow --dir . --target "$HOME" --simulate --restow tmux fish doom bin

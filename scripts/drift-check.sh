@@ -17,7 +17,6 @@ pairs=(
 
 status=0
 for pair in "${pairs[@]}"; do
-  src="${pair%%:*}"
   dst="${pair##*:}"
 
   if [[ ! -e "$dst" ]]; then

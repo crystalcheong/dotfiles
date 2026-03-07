@@ -9,7 +9,7 @@ mkdir -p "$BACKUP_DIR"
 backup_if_exists() {
   local path="$1"
   if [[ -e "$path" && ! -L "$path" ]]; then
-    local rel="${path#$HOME/}"
+    local rel="${path#"$HOME"/}"
     mkdir -p "$BACKUP_DIR/$(dirname "$rel")"
     mv "$path" "$BACKUP_DIR/$rel"
     echo "Backed up: $path -> $BACKUP_DIR/$rel"
