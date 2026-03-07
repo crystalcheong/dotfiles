@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+set -eu
+
+root="${2:-$PWD}"
+root="$(cd "$root" && pwd -P)"
+
+# Default session name is derived from absolute path, so it works from anywhere
+# and avoids collisions for folders with the same basename.
+if [ "${1:-}" != "" ]; then
+  name="$1"
+else
+  base="$(basename "$root" | tr -c '[:alnum:]_-' '_')"
+  hash="$(printf '%s' "$root" | cksum | awk '{print $1}')"
+  name="${base}_${hash}"
+fi
+
+if ! tmux has-session -t "$name" 2>/dev/null; then
+  tmux new-session -d -s "$name" -c "$root" -n code
+  p_left="$(tmux list-panes -t "$name":code -F '#{pane_id}' | head -n1)"
+  p_right="$(tmux split-window -h -P -F '#{pane_id}' -t "$name":code -c "$root")"
+  p_bottom="$(tmux split-window -v -P -F '#{pane_id}' -t "$p_left" -c "$root")"
+  tmux send-keys -t "$p_left" 'clear' C-m
+  tmux send-keys -t "$p_right" 'if test -d .git; git status -sb; else pwd; end' C-m
+  tmux send-keys -t "$p_bottom" 'ls -la' C-m
+  tmux select-pane -t "$p_left"
+  tmux new-window -t "$name" -n tests -c "$root"
+  tmux send-keys -t "$name":tests 'clear' C-m
+fi
+
+if [ -n "${TMUX:-}" ]; then
+  exec tmux switch-client -t "$name"
+else
+  exec tmux attach -t "$name"
+fi

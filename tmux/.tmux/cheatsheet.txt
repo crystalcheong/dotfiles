@@ -1,0 +1,37 @@
+TMUX QUICK MAP (prefix: Ctrl-a)
+
+Sessions
+  C-a s      choose session/tree
+  C-a $      rename session
+  C-a d      detach client
+  C-a x      kill current session (confirm)
+
+Windows
+  C-a c      new window
+  C-a ,      rename window
+  C-a n/p    next/previous window
+  C-a w      window list
+  C-a &      kill window (confirm)
+
+Panes
+  C-a |      split vertical
+  C-a -      split horizontal
+  C-a h/j/k/l  move pane focus (vim)
+  C-a H/J/K/L  resize pane by 5 cells
+  C-a z      zoom/unzoom pane
+  C-a q      show pane numbers
+  C-a !      break pane into window
+  C-a Space  next pane layout
+  C-a x      kill current session (confirm)
+
+Hints
+  C-a ?      popup cheat sheet
+  C-a t      toggle compact status hints
+  C-a C-a    send prefix to application
+
+Copy mode (vi keys)
+  C-a [      enter copy mode
+  S-PgUp/PgDn quick scroll (terminal-dependent)
+  v          begin selection
+  y          copy selection
+  q          quit copy mode
