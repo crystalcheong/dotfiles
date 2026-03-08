@@ -2,6 +2,9 @@
 
 This repo centralizes your terminal/editor stack so changes are easy to sync and reproducible on a new machine.
 
+Current setup policy: `scripts/setup.sh` is current-user-only.
+It only writes inside `$HOME`, refuses shared Homebrew prefixes, and does not modify system files such as `/etc/shells`.
+
 ## What is managed
 
 - `tmux`: `~/.tmux.conf`, `~/.tmux/*`
@@ -52,7 +55,7 @@ Cons:
 
 ```mermaid
 flowchart LR
-  A[Clone dotfiles] --> B[Install Homebrew]
+  A[Clone dotfiles] --> B[Verify user-scoped Homebrew]
   B --> C[brew bundle]
   C --> D[bootstrap.sh]
   D --> E[stow symlinks into HOME]
@@ -89,7 +92,7 @@ Setup flags:
 
 ```bash
 ./scripts/setup.sh -h
-./scripts/setup.sh --yes --skip-shell
+./scripts/setup.sh --yes
 ./scripts/setup.sh --yes --skip-doom --skip-validate
 ```
 
@@ -102,7 +105,7 @@ git clone <your-repo-url> ~/dotfiles
 cd ~/dotfiles
 ```
 
-2. Install Homebrew (if needed):
+2. Verify a user-scoped Homebrew install under `$HOME`:
 
 ```bash
 ./scripts/install-brew.sh
@@ -120,7 +123,7 @@ cd ~/dotfiles
 ./scripts/bootstrap.sh
 ```
 
-5. Set fish as default shell:
+5. Optionally set fish as default shell after an admin has already approved it in `/etc/shells`:
 
 ```bash
 ./scripts/set-default-shell.sh

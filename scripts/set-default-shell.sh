@@ -8,8 +8,10 @@ fi
 
 fish_path="$(command -v fish)"
 if ! grep -q "$fish_path" /etc/shells; then
-  echo "Adding $fish_path to /etc/shells (sudo required)"
-  echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
+  echo "$fish_path is not listed in /etc/shells." >&2
+  echo "Refusing to modify /etc/shells from dotfiles setup." >&2
+  echo "Ask an admin to add it first, then rerun this script if you still want chsh." >&2
+  exit 1
 fi
 
 if [[ "$SHELL" != "$fish_path" ]]; then

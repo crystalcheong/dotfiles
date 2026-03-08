@@ -5,7 +5,6 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPTS_DIR="$DOTFILES_DIR/scripts"
 
 YES=0
-SKIP_SHELL=0
 SKIP_DOOM=0
 SKIP_VALIDATE=0
 
@@ -14,25 +13,23 @@ print_help() {
 Usage: ./scripts/setup.sh [options]
 
 Interactive one-click setup for dotfiles:
-1) Install Homebrew (if missing)
+1) Verify user-scoped Homebrew under $HOME
 2) Install tools from brewfile
-3) Configure GPG signing pinentry (brew-managed)
+3) Configure GPG signing pinentry (user config only)
 4) Ensure devcontainer CLI (brew first, bun fallback)
 5) Stow/bootstrap dotfiles into $HOME
 6) Install Doom Emacs (if missing) and run doom sync
-7) Optionally set fish as login shell
-8) Validate installation
+7) Validate installation
 
 Options:
   -h, --help       Show this help and exit
   --yes            Non-interactive mode; accept defaults
-  --skip-shell     Do not run set-default-shell.sh
   --skip-doom      Skip Doom install/sync step
   --skip-validate  Skip validate.sh step
 
 Examples:
   ./scripts/setup.sh
-  ./scripts/setup.sh --yes --skip-shell
+  ./scripts/setup.sh --yes
   ./scripts/setup.sh --yes --skip-doom --skip-validate
 EOF
 }
@@ -45,10 +42,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --yes)
       YES=1
-      shift
-      ;;
-    --skip-shell)
-      SKIP_SHELL=1
       shift
       ;;
     --skip-doom)
@@ -77,15 +70,6 @@ confirm_yes_default() {
   [[ "$reply" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]
 }
 
-confirm_no_default() {
-  local prompt="$1"
-  if [[ $YES -eq 1 ]]; then
-    return 0
-  fi
-  read -r -p "$prompt [y/N] " reply
-  [[ "$reply" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]
-}
-
 run_step() {
   local label="$1"
   shift
@@ -94,12 +78,33 @@ run_step() {
   "$@"
 }
 
+require_user_scoped_brew() {
+  local brew_prefix
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "brew not found." >&2
+    echo "Current-user-only setup requires a Homebrew installation under \$HOME." >&2
+    return 1
+  fi
+
+  brew_prefix="$(brew --prefix)"
+  case "$brew_prefix" in
+    "$HOME"/*)
+      return 0
+      ;;
+    *)
+      echo "Refusing shared Homebrew prefix: $brew_prefix" >&2
+      echo "This setup only supports Brew installs and packages scoped to the current user." >&2
+      return 1
+      ;;
+  esac
+}
+
 ensure_gpg_signing_tooling() {
   local uname_s pinentry_path conf desired tmp
   uname_s="$(uname -s)"
 
   if ! command -v gpg >/dev/null 2>&1; then
-    if command -v brew >/dev/null 2>&1; then
+    if require_user_scoped_brew; then
       echo "gpg missing; installing gnupg via Homebrew..."
       brew install gnupg
     else
@@ -122,7 +127,7 @@ ensure_gpg_signing_tooling() {
     fi
 
     if [[ -z "$pinentry_path" ]]; then
-      if command -v brew >/dev/null 2>&1; then
+      if require_user_scoped_brew; then
         echo "pinentry-mac missing; installing via Homebrew..."
         brew install pinentry-mac
       fi
@@ -182,7 +187,7 @@ ensure_devcontainer_cli() {
     return 0
   fi
 
-  if command -v brew >/dev/null 2>&1; then
+  if require_user_scoped_brew; then
     echo "devcontainer missing; trying Homebrew formula..."
     brew install devcontainer || true
   fi
@@ -193,7 +198,7 @@ ensure_devcontainer_cli() {
   fi
 
   if ! command -v bun >/dev/null 2>&1; then
-    if command -v brew >/dev/null 2>&1; then
+    if require_user_scoped_brew; then
       echo "bun missing; installing via Homebrew for fallback path..."
       brew install bun || true
     fi
@@ -243,11 +248,12 @@ ensure_doom_repo() {
 }
 
 echo "Dotfiles setup starting from: $DOTFILES_DIR"
+echo "Mode: current-user-only (no shared Homebrew prefix, no system file edits)"
 
-if confirm_yes_default "Run Homebrew install check?"; then
+if confirm_yes_default "Verify user-scoped Homebrew is available?"; then
   run_step "install-brew.sh" "$SCRIPTS_DIR/install-brew.sh"
 else
-  echo "Skipping Homebrew install check."
+  echo "Skipping Homebrew verification."
 fi
 
 if confirm_yes_default "Install/update tools from brewfile?"; then
@@ -289,13 +295,8 @@ else
   echo "Skipping Doom step."
 fi
 
-if [[ $SKIP_SHELL -eq 1 ]]; then
-  echo "Skipping shell switch (--skip-shell)."
-elif confirm_no_default "Set fish as default login shell now?"; then
-  run_step "set-default-shell.sh" "$SCRIPTS_DIR/set-default-shell.sh"
-else
-  echo "Skipping default shell change."
-fi
+echo "Skipping default shell change from setup to avoid touching /etc/shells."
+echo "Run scripts/set-default-shell.sh manually only after fish is already approved in /etc/shells."
 
 if [[ $SKIP_VALIDATE -eq 1 ]]; then
   echo "Skipping validation (--skip-validate)."

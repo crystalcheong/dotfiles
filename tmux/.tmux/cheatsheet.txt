@@ -9,9 +9,10 @@ Sessions
 Windows
   C-a c      new window
   C-a ,      rename window
-  C-a n/p    next/previous window
+  C-a n      next window
+  C-a p      previous window
   C-a w      window list
-  C-a &      kill window (confirm)
+  C-a &      kill current window (confirm)
 
 Panes
   C-a |      split vertical
@@ -22,7 +23,6 @@ Panes
   C-a q      show pane numbers
   C-a !      break pane into window
   C-a Space  next pane layout
-  C-a x      kill current session (confirm)
 
 Hints
   C-a ?      popup cheat sheet
@@ -30,8 +30,10 @@ Hints
   C-a C-a    send prefix to application
 
 Copy mode (vi keys)
-  C-a [      enter copy mode
+  C-a [      enter copy mode / scrollback
+  Up/Down    scroll by line in copy mode
+  PgUp/PgDn  scroll by page in copy mode
+  q          quit copy mode
   S-PgUp/PgDn quick scroll (terminal-dependent)
   v          begin selection
   y          copy selection
-  q          quit copy mode
