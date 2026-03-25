@@ -8,7 +8,7 @@ It only writes inside `$HOME`, refuses shared Homebrew prefixes, and does not mo
 ## What is managed
 
 - `tmux`: `~/.tmux.conf`, `~/.tmux/*`
-- `fish`: `~/.config/fish/config.fish`
+- `fish`: `~/.config/fish/**`
 - `doom`: `~/.config/doom/*`
 - `bin`: `~/.local/bin/tmx`
 - `scripts`: bootstrap/install/validate helpers
@@ -24,7 +24,8 @@ It only writes inside `$HOME`, refuses shared Homebrew prefixes, and does not mo
 ├── doom/
 │   └── .config/doom/{init.el,config.el,packages.el,KEYS.md}
 ├── fish/
-│   └── .config/fish/config.fish
+│   ├── .config/fish/config.fish
+│   └── .config/fish/functions/brew-up.fish
 ├── tmux/
 │   ├── .tmux.conf
 │   └── .tmux/{cheatsheet.txt,show-help.sh}
@@ -69,11 +70,13 @@ flowchart LR
 graph TD
   DF[~/dotfiles] --> TMUX[tmux/.tmux.conf]
   DF --> FISH[fish/.config/fish/config.fish]
+  DF --> FISH_FUNCS[fish/.config/fish/functions/brew-up.fish]
   DF --> DOOM[doom/.config/doom/*]
   DF --> BIN[bin/.local/bin/tmx]
 
   TMUX -.symlink.-> HOME_TMUX[~/.tmux.conf]
   FISH -.symlink.-> HOME_FISH[~/.config/fish/config.fish]
+  FISH_FUNCS -.symlink.-> HOME_FISH_FUNCS[~/.config/fish/functions/brew-up.fish]
   DOOM -.symlink.-> HOME_DOOM[~/.config/doom/*]
   BIN -.symlink.-> HOME_BIN[~/.local/bin/tmx]
 ```
@@ -162,6 +165,8 @@ git push
 ## Homebrew QoL (fish)
 
 - `brew-up`: comprehensive Homebrew maintenance with dotfiles sync
+
+It lives in `fish/.config/fish/functions/brew-up.fish` so Stow can link it into `~/.config/fish/functions/`.
 
 It runs:
 

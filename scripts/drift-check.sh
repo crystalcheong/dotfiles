@@ -3,11 +3,38 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+check_path() {
+  local dst="$1"
+
+  if [[ ! -e "$dst" ]]; then
+    echo "[missing] $dst"
+    return 1
+  fi
+
+  if [[ -L "$dst" ]]; then
+    local target
+    target="$(readlink "$dst")"
+    echo "[link] $dst -> $target"
+    return 0
+  fi
+
+  echo "[not-link] $dst"
+  return 1
+}
+
+status=0
+
+while IFS= read -r src; do
+  dst="$HOME/${src#"$DOTFILES_DIR/fish/"}"
+  if ! check_path "$dst"; then
+    status=1
+  fi
+done < <(find "$DOTFILES_DIR/fish" -type f | sort)
+
 pairs=(
   "$DOTFILES_DIR/tmux/.tmux.conf:$HOME/.tmux.conf"
   "$DOTFILES_DIR/tmux/.tmux/cheatsheet.txt:$HOME/.tmux/cheatsheet.txt"
   "$DOTFILES_DIR/tmux/.tmux/show-help.sh:$HOME/.tmux/show-help.sh"
-  "$DOTFILES_DIR/fish/.config/fish/config.fish:$HOME/.config/fish/config.fish"
   "$DOTFILES_DIR/doom/.config/doom/init.el:$HOME/.config/doom/init.el"
   "$DOTFILES_DIR/doom/.config/doom/config.el:$HOME/.config/doom/config.el"
   "$DOTFILES_DIR/doom/.config/doom/packages.el:$HOME/.config/doom/packages.el"
@@ -15,7 +42,6 @@ pairs=(
   "$DOTFILES_DIR/bin/.local/bin/tmx:$HOME/.local/bin/tmx"
 )
 
-status=0
 for pair in "${pairs[@]}"; do
   dst="${pair##*:}"
 
